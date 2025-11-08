@@ -1,0 +1,114 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with PostGIS
+  db:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: roadeye_db
+    environment:
+      POSTGRES_USER: roadeye
+      POSTGRES_PASSWORD: roadeye_password
+      POSTGRES_DB: roadeye_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - roadeye_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U roadeye"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching and message queue
+  redis:
+    image: redis:7-alpine
+    container_name: roadeye_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - roadeye_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API (Golang)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: roadeye_backend
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - ENV=production
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=roadeye
+      - DB_PASSWORD=roadeye_password
+      - DB_NAME=roadeye_db
+      - DB_SSLMODE=disable
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - AI_SERVICE_URL=http://ai-service:8001
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      - JWT_EXPIRY=24h
+      - JWT_REFRESH_EXPIRY=168h
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - roadeye_net
+    restart: unless-stopped
+
+  # AI Detection Service (Python FastAPI)
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: roadeye_ai
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - roadeye_net
+    restart: unless-stopped
+    # Uncomment for GPU support
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # Optional: pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: roadeye_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@roadeye.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - roadeye_net
+    profiles:
+      - dev
+
+networks:
+  roadeye_net:
+    driver: bridge
+
+volumes:
+  postgres_data:

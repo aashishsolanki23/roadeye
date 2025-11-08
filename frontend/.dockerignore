@@ -1,0 +1,32 @@
+# Frontend
+node_modules/
+.expo/
+dist/
+*.log
+
+# Backend
+backend/bin/
+backend/vendor/
+backend/.env
+
+# AI Service
+ai-service/__pycache__/
+ai-service/*.pyc
+ai-service/venv/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+README.md
+SETUP.md
+*.md

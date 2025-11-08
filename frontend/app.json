@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "RoadEye",
+    "slug": "roadeye",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.roadeye.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "RoadEye needs camera access to detect road hazards in real-time.",
+        "NSLocationWhenInUseUsageDescription": "RoadEye needs your location to show nearby hazards and report new ones."
+      }
+    },
+    "android": {
+      "package": "com.roadeye.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow RoadEye to access your camera to detect road hazards."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow RoadEye to use your location to show nearby hazards."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#4a90e2"
+        }
+      ]
+    ]
+  }
+}
